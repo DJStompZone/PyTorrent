@@ -34,8 +34,14 @@ You can run the following command to install the dependencies using pip
 
 ### Running the program
 
-Simply run:
-`python main.py /path/to/your/file.torrent`
+After installing the package you can run PyTorrent from anywhere with:
+`pytorrent /path/to/your/file.torrent`
+
+Magnet URIs are supported as well:
+`pytorrent "magnet:?xt=urn:btih:..."`
+
+For local development you can also use:
+`python -m pytorrent /path/to/your/file.torrent`
 
 The files will be downloaded in the same path as your main.py script.
 

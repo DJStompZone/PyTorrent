@@ -1,29 +1,20 @@
+import os
 import sys
-from block import State
+import time
+import logging
+
+from pytorrent.block import State
+from pytorrent import message, peers_manager, pieces_manager, torrent, tracker
 
 __author__ = 'alexisgallepe'
-
-import time
-import peers_manager
-import pieces_manager
-import torrent
-import tracker
-import logging
-import os
-import message
 
 
 class Run(object):
     percentage_completed = -1
     last_log_line = ""
 
-    def __init__(self):
-        try:
-            torrent_file = sys.argv[1]
-        except IndexError:
-            logging.error("No torrent file provided!")
-            sys.exit(0)
-        self.torrent = torrent.Torrent().load_from_path(torrent_file)
+    def __init__(self, torrent_source: str):
+        self.torrent = torrent.Torrent().load_from_uri(torrent_source)
         self.tracker = tracker.Tracker(self.torrent)
 
         self.pieces_manager = pieces_manager.PiecesManager(self.torrent)
@@ -101,8 +92,19 @@ class Run(object):
         os._exit(0)
 
 
-if __name__ == '__main__':
+def main(argv=None):
     logging.basicConfig(level=logging.DEBUG)
 
-    run = Run()
+    args = sys.argv[1:] if argv is None else argv
+    try:
+        torrent_source = args[0]
+    except IndexError:
+        logging.error("No torrent file or magnet URI provided!")
+        sys.exit(1)
+
+    run = Run(torrent_source)
     run.start()
+
+
+if __name__ == '__main__':
+    main()
