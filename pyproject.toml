@@ -1,0 +1,23 @@
+[project]
+name = "pytorrent"
+version = "1.0.0"
+description = "Basic python torrent client"
+authors = [
+    {name = "DJ Stomp",email = "85457381+DJStompZone@users.noreply.github.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "bcoding (==1.5)",
+    "bitstring (==3.1.7)",
+    "pypubsub (==4.0.3)",
+    "requests (>=2.24.0)",
+    "pubsub (==0.1.2)",
+    "ipaddress (==1.0.23)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
