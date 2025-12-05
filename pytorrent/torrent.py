@@ -1,12 +1,16 @@
+import base64
+import binascii
 import math
+import os
+import time
+from urllib.parse import parse_qs, urlparse
 
 __author__ = 'alexisgallepe'
 
 import hashlib
-import time
-from bcoding import bencode, bdecode
 import logging
-import os
+import requests
+from bcoding import bencode, bdecode
 
 
 class Torrent(object):
@@ -25,6 +29,25 @@ class Torrent(object):
         with open(path, 'rb') as file:
             contents = bdecode(file)
 
+        return self._load_from_torrent_file(contents)
+
+    def load_from_magnet(self, magnet_uri: str):
+        info_hash = self._extract_info_hash(magnet_uri)
+        torrent_bytes = self._download_torrent_from_info_hash(info_hash)
+        contents = bdecode(torrent_bytes)
+
+        return self._load_from_torrent_file(contents)
+
+    def load_from_uri(self, uri: str):
+        if uri.startswith("magnet:?"):
+            return self.load_from_magnet(uri)
+
+        if not os.path.isfile(uri):
+            raise FileNotFoundError(f"Torrent file not found at path: {uri}")
+
+        return self.load_from_path(uri)
+
+    def _load_from_torrent_file(self, contents):
         self.torrent_file = contents
         self.piece_length = self.torrent_file['info']['piece length']
         self.pieces = self.torrent_file['info']['pieces']
@@ -41,6 +64,48 @@ class Torrent(object):
         assert(len(self.file_names) > 0)
 
         return self
+
+    def _extract_info_hash(self, magnet_uri: str) -> str:
+        parsed = urlparse(magnet_uri)
+        if parsed.scheme != "magnet":
+            raise ValueError("Invalid magnet URI")
+
+        query = parse_qs(parsed.query)
+        xt_params = query.get("xt", [])
+        for xt in xt_params:
+            if xt.startswith("urn:btih:"):
+                info_hash = xt.split(":")[-1]
+                try:
+                    bytes.fromhex(info_hash)
+                    return info_hash.lower()
+                except ValueError:
+                    try:
+                        decoded = base64.b32decode(info_hash)
+                        return decoded.hex()
+                    except binascii.Error:
+                        continue
+
+        raise ValueError("Unable to parse info hash from magnet URI")
+
+    def _download_torrent_from_info_hash(self, info_hash: str) -> bytes:
+        urls = [
+            f"https://itorrents.org/torrent/{info_hash}.torrent",
+            f"https://btcache.me/torrent/{info_hash}",
+        ]
+
+        for url in urls:
+            try:
+                response = requests.get(url, timeout=10)
+            except requests.RequestException as exc:
+                logging.debug("Failed to fetch %s: %s", url, exc)
+                continue
+
+            if response.status_code == 200 and response.content:
+                return response.content
+
+            logging.debug("Torrent not available at %s (status %s)", url, response.status_code)
+
+        raise ConnectionError("Could not download torrent metadata from available magnet mirrors")
 
     def init_files(self):
         root = self.torrent_file['info']['name']
