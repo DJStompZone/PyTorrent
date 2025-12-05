@@ -1,8 +1,8 @@
 import ipaddress
 import struct
-import peer
-from message import UdpTrackerConnection, UdpTrackerAnnounce, UdpTrackerAnnounceOutput
-from peers_manager import PeersManager
+from pytorrent import peer
+from pytorrent.message import UdpTrackerConnection, UdpTrackerAnnounce, UdpTrackerAnnounceOutput
+from pytorrent.peers_manager import PeersManager
 
 __author__ = 'alexisgallepe'
 

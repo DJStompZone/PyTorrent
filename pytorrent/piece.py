@@ -6,7 +6,7 @@ import time
 import logging
 
 from pubsub import pub
-from block import Block, BLOCK_SIZE, State
+from pytorrent.block import Block, BLOCK_SIZE, State
 
 
 class Piece(object):

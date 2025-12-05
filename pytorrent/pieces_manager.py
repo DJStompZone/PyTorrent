@@ -1,6 +1,6 @@
 __author__ = 'alexisgallepe'
 
-import piece
+import pytorrent.piece
 import bitstring
 import logging
 from pubsub import pub
